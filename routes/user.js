@@ -1,16 +1,32 @@
 const { Router } = require('express');
-const { usuariosGet, usuariosDelete, usuariosPut, usuariosPost, usuariosPatch } = require('../controllers/user');
+const { check } = require('express-validator');
+const { usersGet, usersDelete, usersPut, usersPost, usersPatch } = require('../controllers/user');
+
+const { validation } = require('../middlewares/fields-validation');
+const { isValidRole, emailExists } = require('../helpers/db-validators');
 
 const router = Router();
 
-router.get('/', usuariosGet );
+router.get('/', usersGet );
 
-router.put('/', usuariosPut);
+router.put('/', usersPut);
 
-router.patch('/', usuariosPatch);
+router.post('/',[
 
-router.post('/', usuariosPost);
+    check('name', 'name is required').not().isEmpty(),
+    check('password', 'password minimum length is 6 chars').isLength({min : 6}),
+    check('email', 'email is incorrect').isEmail(),
+    
+    check('email').custom( emailExists ),
+    
+    check('role').custom( isValidRole ),
+    
+    validation
 
-router.delete('/', usuariosDelete);
+], usersPost);
+
+router.patch('/', usersPatch);
+
+router.delete('/', usersDelete);
 
 module.exports = router;

@@ -1,31 +1,48 @@
-const { request, response } = require('express');
 
-const usuariosGet = (req, res = response) => {
+const { request, response } = require('express');
+const bcryptjs = require('bcryptjs');
+
+const User = require ('../models/user');
+
+const usersGet = (req, res = response) => {
 
     res.json({
         msg: 'get API - controlador'
         });
 }
-const usuariosPost = (req = request, res = response) => {
+const usersPost = async (req = request, res = response) => {
 
-    const body = req.body;
-    res.json({
-        body
-        });
+    const {name, email, password, role} = req.body;
+    const user = new User({ name, email, password, role });
+
+    //verificar si el email existe
+
+    //hash a la contraseña
+    const salt = bcryptjs.genSaltSync(10);
+    user.password = bcryptjs.hashSync( password, salt);
+
+    //guardar en bd
+    await user.save();
+
+    res.json({ user });
+
 }
-const usuariosPut = (req, res = response) => {
+
+const usersPut = (req, res = response) => {
 
     res.json({
         msg: 'put API - controlador'
         });
 }
-const usuariosPatch = (req, res = response) => {
+
+const usersPatch = (req, res = response) => {
 
     res.json({
         msg: 'patch API - controlador'
         });
 }
-const usuariosDelete = (req, res = response) => {
+
+const usersDelete = (req, res = response) => {
 
     res.json({
         msg: 'delete API - controlador'
@@ -34,11 +51,11 @@ const usuariosDelete = (req, res = response) => {
 
 module.exports = {
 
-    usuariosGet,
-    usuariosPost,
-    usuariosPut,
-    usuariosPatch,
-    usuariosDelete
+    usersGet,
+    usersPost,
+    usersPut,
+    usersPatch,
+    usersDelete
 
 }
 
