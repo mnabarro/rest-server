@@ -4,18 +4,26 @@ const bcryptjs = require('bcryptjs');
 
 const User = require ('../models/user');
 
-const usersGet = (req, res = response) => {
+const usersGet = async(req, res = response) => {
 
-    res.json({
-        msg: 'get API - controlador'
-        });
+    const { limit = 5, start = 0 } = req.query;
+    const query = {status: true};
+
+    const [ total, users ] = await Promise.all([
+        User.countDocuments( query ),
+
+        User.find( query )
+            .skip( Number( start ) )
+            .limit( Number( limit ) )
+    ]);
+
+    res.json( { total, users } );
 }
+
 const usersPost = async (req = request, res = response) => {
 
     const {name, email, password, role} = req.body;
     const user = new User({ name, email, password, role });
-
-    //verificar si el email existe
 
     //hash a la contraseña
     const salt = bcryptjs.genSaltSync(10);
@@ -24,29 +32,42 @@ const usersPost = async (req = request, res = response) => {
     //guardar en bd
     await user.save();
 
-    res.json({ user });
+    res.json( user );
 
 }
 
-const usersPut = (req, res = response) => {
+const usersPut = async(req, res = response) => {
 
-    res.json({
-        msg: 'put API - controlador'
-        });
+    const { id } = req.params;
+    const { _id, password, google, email, ...other } = req.body;
+    //validar id contra bd
+
+    if ( password ) {
+
+        const salt = bcryptjs.genSaltSync(10);
+        other.password = bcryptjs.hashSync( password, salt);
+    
+    }
+
+    const user = await User.findByIdAndUpdate( id, other );
+
+    res.json( user );
 }
 
 const usersPatch = (req, res = response) => {
 
     res.json({
-        msg: 'patch API - controlador'
+        msg: 'patch API - controlador',
+        id
         });
 }
 
-const usersDelete = (req, res = response) => {
+const usersDelete = async (req, res = response) => {
 
-    res.json({
-        msg: 'delete API - controlador'
-        });
+    const { id } = req.params;
+
+    const user = await User.findByIdAndUpdate(id, { status : false });
+    res.json( user);
 }
 
 module.exports = {
